@@ -1,7 +1,4 @@
 #app2.py
-#written to match Azure IOT Central device viewhumnfan v2
-#
-
 import asyncio
 import os
 import json
@@ -16,11 +13,14 @@ from azure.iot.device import Message
 
 from humi import Humi
 
+#import Adafruit_DHT
+import argparse
+
 from time import time, ctime
 from os import system
 
 h = Humi(45, 37)    # (humLimit, GPIO pin)
-delay = 600
+delay = 60
 pin = 4
     
 async def main():
@@ -75,7 +75,7 @@ async def main():
             payload = json.dumps({'TemperatureData': t, 'HumidityData': round(rH,2)})
             msg = Message(payload)
             await device_client.send_message(msg, )
-            #print(f'Sent message: {msg}')
+            print(f'Sent message: {msg}')
 
             await asyncio.sleep(delay) 
 
@@ -156,6 +156,60 @@ async def main():
       
     else:
         print('Device could not connect')
+
+
+'''
+# original humLog program start
+    T = time()
+
+    parser = argparse.ArgumentParser(description='add measure cycle in seconds')
+    parser.add_argument("--t", default=10, type=int, help="set the time in seconds - default 10")
+    args=parser.parse_args()
+
+    Tcycle = args.t
+
+    sensor = Adafruit_DHT.AM2302
+    pin = 4
+
+
+    try:
+        #entry state to do measure at start
+        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+        if humidity is not None and temperature is not None:
+            try:
+                r = requests.post(UBI_url, {'Temperature': temperature, 'Humidity': humidity} )
+            except:
+                print("some error during requrests.post")
+            print("Reading @ {2}: {0:3.2f}gC, {1:2.1f}rH   ".format(temperature, humidity, ctime())) 
+        else:
+            print("Reading @ {}: Failed to get reading. Skip this and continue ...".format(ctime()))
+        
+        #entering endless loop for continous runtime
+        while(True):
+            if (time()-T) >= Tcycle:     #T in seconds
+                
+                T = time()
+                humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+                system('clear')
+
+                if humidity is not None and temperature is not None:
+                    print("Reading @ {2}: {0:3.2f}gC, {1:2.1f}rH   ".format(temperature, humidity, ctime())) 
+     #               try:
+     #                   r = requests.post(UBI_url, {'Temperature': temperature, 'Humidity': humidity} )
+     #               except:
+     #                   print("some error during requests.post")
+                else:
+                    print("Reading @ {}: Failed to get reading. Skip this and continue ...".format(ctime()))
+                
+    except KeyboardInterrupt:
+        print("KB interrupt!")
+        
+    except Exception as e:
+        print("Other exception occurred")
+        print(e)
+        
+# original humLog program end
+'''
 
 
 if __name__ == '__main__':
